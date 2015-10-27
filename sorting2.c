@@ -12,14 +12,26 @@ struct list_t {
 }*list;
 
 void readFile(char *fileName, char voidType);
+void writeFile(char *fileName, char sortType);
 void insertItemBeforeList(char *somestring, void* somedata);
 void removeItem(struct list_t *item);
 struct list_t* createItem(char *somestring, void *somedata);
+struct list_t* searchItem(void *laterdata);
 void increaseSort(char voidType);
 void decreaseSort(char voidType);
 void randomSort();
 void swap(struct list_t *item1, struct list_t *item2);
 
+
+struct list_t* searchItem(void *laterdata) {
+	struct list_t *head = list;
+	while(head) {
+		if(head->somedata == laterdata) 
+			return head;
+		head = head->next;
+	}
+	return NULL;
+}
 
 struct list_t* createItem(char *formerstring, void *laterdata) { 
 	struct list_t *temp = (struct list_t *)malloc(sizeof(struct list_t));
@@ -79,8 +91,9 @@ void readFile(char *fileName, char voidType) {
 				break;
 			}
 			case 'c': {
-				char *temp = (char *)malloc(sizeof(char));
-				*temp = *(equalPositon+1);
+				char *temp = (char *)malloc(sizeof(char)*(strlen(equalPositon)-1));
+				strncpy(temp, (equalPositon+1), (strlen(equalPositon)-1));
+				temp[strlen(equalPositon)-1] = '\0';
 				somedata = temp;
 				break;
 			}
@@ -105,12 +118,6 @@ void increaseSort(char voidType) {
 			}
 		}
 	}
-
-	struct list_t *tmp = list;
-	while(tmp) {
-		printf("%s=%d\n", tmp->somestring, *(int *)(tmp->somedata));
-		tmp = tmp->next;
-	}
 }
 	
 void decreaseSort(char voidType) {
@@ -128,16 +135,16 @@ void decreaseSort(char voidType) {
 			}
 		}
 	}
-
-	struct list_t *tmp = list;
-	while(tmp) {
-		printf("%s=%d\n", tmp->somestring, *(int *)(tmp->somedata));
-		tmp = tmp->next;
-	}
 }
 
 void randomSort() {
-
+	srand(0);
+	for(struct list_t *head = list; head->next != NULL; head = head->next) {
+		for(struct list_t *temp = head; temp != NULL; temp = temp->next) {
+			if(rand() % 2 == 0)
+				swap(head, temp);
+		}
+	}
 }
 
 void swap(struct list_t *node1, struct list_t *node2) {
@@ -145,6 +152,22 @@ void swap(struct list_t *node1, struct list_t *node2) {
 	tempstring = node1->somestring; tempdata = node1->somedata;
 	node1->somestring = node2->somestring; node1->somedata = node2->somedata;
 	node2->somestring = tempstring; node2->somedata = tempdata;
+}
+
+void writeFile(char *fileName, char voidType){
+	FILE *outputFile = fopen(fileName, "w");
+	struct list_t *head = list;
+	while(head) {
+		if(voidType == 'i') {
+			fprintf(outputFile, "%s=%d\n", head->somestring, *(int *)(head->somedata));		
+		}else if(voidType == 'd'){
+			fprintf(outputFile, "%s=%f\n", head->somestring, *(double *)(head->somedata));
+		}else if(voidType == 'c'){
+			fprintf(outputFile, "%s=%s\n", head->somestring, (char *)(head->somedata));
+		}
+		head = head->next;
+	}
+	fclose(outputFile);
 }
 
 int main(int argc, char *argv[]) {
@@ -171,9 +194,12 @@ int main(int argc, char *argv[]) {
 			increaseSort(voidType);
 			break;
 	}
-	struct list_t *tmp = list;
-	while(tmp) {
-		printf("%s=%d\n", tmp->somestring, *(int *)(tmp->somedata));
-		tmp = tmp->next;
-	}
+
+	char *outputFileName = malloc(sizeof(char)*(strlen(argv[2]) + strlen(temp)));
+	strncpy(outputFileName, argv[2], strlen(argv[2]));
+	strncpy(outputFileName+strlen(argv[2]), temp, strlen(temp));
+	outputFileName[strlen(argv[2]) + strlen(temp)] = '\0';
+	printf("writing %s\n", outputFileName);
+	writeFile(outputFileName, voidType);
+
 }
